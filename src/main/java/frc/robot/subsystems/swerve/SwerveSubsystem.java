@@ -16,11 +16,14 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.DEVICE_IDs;
 import frc.robot.Constants.PHYSICAL_CONSTANTS;
+import frc.robot.sim.PhysicsSim;
 import frc.robot.subsystems.swerve.swerveHAL.SwerveModule;
 import frc.robot.utils.DriveStationIO.DriveStationIO;
 import frc.robot.utils.Math.AdvancedPose2D;
@@ -43,6 +46,9 @@ public class SwerveSubsystem extends SubsystemBase{
     private final StructArrayPublisher<SwerveModuleState> currentSwerveStatePublisher;
     private final StructArrayPublisher<SwerveModuleState> desireSwerveStatePublisher;
 
+    // Custom Init function
+    boolean initExecuted = false;
+
     private SwerveSubsystem(){
         // Swerve Modules
         frontLeft = new SwerveModule(
@@ -51,7 +57,7 @@ public class SwerveSubsystem extends SubsystemBase{
             DEVICE_IDs.DRIVEBASE.FRONT_LEFT_CANCODER_ID, 
             PHYSICAL_CONSTANTS.DRIVEBASE.CANCODER.FRONT_LEFT_OFFSET, 
             true,
-            0,
+            1,
             true
         );
 
@@ -61,7 +67,7 @@ public class SwerveSubsystem extends SubsystemBase{
             DEVICE_IDs.DRIVEBASE.FRONT_RIGHT_CANCODER_ID, 
             PHYSICAL_CONSTANTS.DRIVEBASE.CANCODER.FRONT_RIGHT_OFFSET, 
             true,
-            1,
+            0,
             true
         );
 
@@ -71,7 +77,7 @@ public class SwerveSubsystem extends SubsystemBase{
             DEVICE_IDs.DRIVEBASE.REAR_LEFT_CANCODER_ID, 
             PHYSICAL_CONSTANTS.DRIVEBASE.CANCODER.REAR_LEFT_OFFSET, 
             true,
-            0, 
+            1, 
             true
         );
 
@@ -81,7 +87,7 @@ public class SwerveSubsystem extends SubsystemBase{
             DEVICE_IDs.DRIVEBASE.REAR_RIGHT_CANCODER_ID, 
             PHYSICAL_CONSTANTS.DRIVEBASE.CANCODER.REAR_RIGHT_OFFSET, 
             true,
-            1,
+            0,
             true
         );
 
@@ -90,31 +96,20 @@ public class SwerveSubsystem extends SubsystemBase{
         gyro.setAngleAdjustment(0);
 
         // reset gyro & encoders
-        new Thread(
-            () -> {
-                try {
-                    Thread.sleep(10);
-                    frontLeft.resetEncoders();
-                    Thread.sleep(10);
-                    frontRight.resetEncoders();
-                    Thread.sleep(10);
-                    rearLeft.resetEncoders();
-                    Thread.sleep(10);
-                    rearRight.resetEncoders();
-                    Thread.sleep(1000);
-                    gyro.zeroYaw();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        ).start();
+        frontLeft.resetEncoders();
+        frontRight.resetEncoders();
+        rearLeft.resetEncoders();
+        rearRight.resetEncoders();
+        Timer.delay(0.5);
+        gyro.zeroYaw();
 
         // Pose Estimator
         poseEstimator = new SwerveDrivePoseEstimator(
             Constants.PHYSICAL_CONSTANTS.DRIVEBASE.KINEMATICS, 
             getGyroRotation2D(),
             getSwerveModulePositions(),
-            DriveStationIO.getInstance().isBlue() ? initPose : initPose.flip(0, 0)
+            DriveStationIO.getInstance().isBlue()   ? initPose 
+                                                    : initPose.horizontallyFlip(16.54, 8.21)
         );
 
         // Pathplanner
@@ -156,7 +151,7 @@ public class SwerveSubsystem extends SubsystemBase{
      * @return the CCW(Counter ClockWise Positive) angle in degrees
      */
     public double getHeading() {
-        return gyro.getYaw() * PHYSICAL_CONSTANTS.GYRO_REVERSE_FACTOR;
+        return gyro.getAngle() * PHYSICAL_CONSTANTS.GYRO_REVERSE_FACTOR;
     }
 
     /**
@@ -271,6 +266,13 @@ public class SwerveSubsystem extends SubsystemBase{
         poseEstimator.update(getGyroRotation2D(), getSwerveModulePositions());
     }
 
+    public void stopModules(){
+        frontLeft.stopModule();
+        frontRight.stopModule();
+        rearLeft.stopModule();
+        rearRight.stopModule();
+    }
+
     @Override
     public void periodic(){
         // Pose Estimator
@@ -279,5 +281,28 @@ public class SwerveSubsystem extends SubsystemBase{
         // Telemetry
         estimateField.setRobotPose(getPoseEstimate());
         currentSwerveStatePublisher.set(getSwerveModuleStates());
+
+        SmartDashboard.putData("Estimate Field", estimateField);
+        SmartDashboard.putNumber("Gyro(CCW)", getHeading());
+    }
+
+    public void simulationInit(){
+        // Drive Motors
+        PhysicsSim.getInstance().addTalonFX(frontLeft.driveMotor, PHYSICAL_CONSTANTS.DRIVEBASE.GEARS.DRIVE_GEAR_RATIO, 0.0007);
+        PhysicsSim.getInstance().addTalonFX(frontRight.driveMotor, PHYSICAL_CONSTANTS.DRIVEBASE.GEARS.DRIVE_GEAR_RATIO, 0.0007);
+        PhysicsSim.getInstance().addTalonFX(rearLeft.driveMotor, PHYSICAL_CONSTANTS.DRIVEBASE.GEARS.DRIVE_GEAR_RATIO, 0.0007);
+        PhysicsSim.getInstance().addTalonFX(rearRight.driveMotor, PHYSICAL_CONSTANTS.DRIVEBASE.GEARS.DRIVE_GEAR_RATIO, 0.0007);
+
+        // Turn & CANCoder
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        if(!initExecuted) {
+            simulationInit();
+            initExecuted = true;
+        }
+
+        PhysicsSim.getInstance().run();
     }
 }

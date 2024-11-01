@@ -1,5 +1,6 @@
 package frc.robot.subsystems.swerve.swerveHAL;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -25,20 +26,23 @@ import frc.robot.Constants.TUNED_CONSTANTS;
 import frc.robot.utils.Conversions.WheelConversions;
 
 public class SwerveModule{
-    private TalonFX driveMotor;
+    public TalonFX driveMotor;
     private TalonFXConfiguration driveConfig;
 
-    private CANSparkMax turnMotor;
-    private RelativeEncoder turnEncoder;
+    public CANSparkMax turnMotor;
+    public RelativeEncoder turnEncoder;
     private PIDController turnController;
 
-    private CANcoder canCoder;
+    public CANcoder canCoder;
 
     // drive motor velocity control && FeedForward
     private DutyCycleOut driveDutyCycle = new DutyCycleOut(0);
     private VelocityVoltage driveVelocity = new VelocityVoltage(0);
     
     private final SimpleMotorFeedforward driveFeedForward;
+
+    // Simulation
+    private double outputVoltage = 0;
 
     /**
      * Create a Swerve Module Object
@@ -87,6 +91,8 @@ public class SwerveModule{
                 ).withMagnetOffset(CANCoderOffset)
         );
 
+        BaseStatusSignal.setUpdateFrequencyForAll(100, canCoder.getAbsolutePosition());
+
         // Turn Feedback Controls
         turnEncoder = turnMotor.getEncoder();
         turnEncoder.setPositionConversionFactor((1.0 / PHYSICAL_CONSTANTS.DRIVEBASE.GEARS.TURN_GEAR_RATIO) * Math.PI * 2.0);
@@ -124,11 +130,11 @@ public class SwerveModule{
     }
 
     /**
-     * get the absolute angle of CANCoder
+     * get the absolute angle of CANCoder, with an delay of 200ms
      * @return the angle in Radians
      */
     public double getAbsoluteAngleRad() {
-        return canCoder.getAbsolutePosition().getValue() * Math.PI * 2;
+        return canCoder.getAbsolutePosition().waitForUpdate(0.1).getValue() * Math.PI * 2; 
     }
 
     /**
@@ -223,7 +229,17 @@ public class SwerveModule{
      * @param desireState the desired {@link SwerveModuleState} 
      */
     private void setTurn(SwerveModuleState desireState){
-        turnMotor.set(turnController.calculate(getTurnAngleRad(),  desireState.angle.getRadians()));
+        double speed = turnController.calculate(getTurnAngleRad(),  desireState.angle.getRadians());
+        
+        // normalize
+        if(speed > 1) speed = 1;
+        if(speed < -1) speed = -1;
+        
+        // apply
+        turnMotor.set(speed);
+
+        // simulation
+        outputVoltage = speed * PHYSICAL_CONSTANTS.NOMINAL_VOLTAGE;
     }
 
     /**
@@ -263,5 +279,12 @@ public class SwerveModule{
     public void stopModule(){
         driveMotor.stopMotor();
         turnMotor.stopMotor();
+    }
+
+    /**
+     * get the output voltage [0, 12] for simulation uses
+     */
+    public double getAppliedOutput(){
+        return outputVoltage;
     }
 }

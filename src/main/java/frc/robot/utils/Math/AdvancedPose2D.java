@@ -17,11 +17,11 @@ public class AdvancedPose2D extends Pose2d{
         return new Pose2d(this.getTranslation(), this.getRotation());
     }
 
-    public AdvancedPose2D flip(double fieldLength, double fieldWidth){
+    public AdvancedPose2D horizontallyFlip(double fieldLength, double fieldWidth){
         return new AdvancedPose2D(
             new Translation2d(
                 fieldLength - this.getTranslation().getX(),
-                fieldWidth - this.getTranslation().getY()
+                this.getTranslation().getY()
             ),
             Rotation2d.fromDegrees(
                 (this.getRotation().getDegrees() > 0) ?
