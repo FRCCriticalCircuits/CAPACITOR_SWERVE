@@ -21,9 +21,9 @@ public class RobotContainer {
   public RobotContainer() {
     swerveSubsystem.setDefaultCommand(
       new manualDrive(
-        () -> -controller.getDriverLY(), // x-axis up-positive
-        () -> -controller.getDriverLX(), // y-axis left-positive 
-        () -> -controller.getDriverRX(), // rotation CCW
+        () -> -controller.getDriverLY(), // x-axis up-positive (donot change unless controller is not same)
+        () -> -controller.getDriverLX(), // y-axis left-positive (donot change unless controller is not same)
+        () -> -controller.getDriverRX(), // rotation CCW (donot change unless controller is not same)
         () -> controller.getDriverLT(),
         () -> controller.getDriverRT()
       )

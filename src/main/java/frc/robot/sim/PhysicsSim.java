@@ -1,13 +1,7 @@
 package frc.robot.sim;
 
 import java.util.ArrayList;
-import java.util.function.Supplier;
-
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-
 import frc.robot.sim.devices.TalonFXSimProfile;
 
 /**
