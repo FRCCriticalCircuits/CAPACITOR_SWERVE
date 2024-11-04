@@ -3,7 +3,7 @@ package frc.robot.subsystems.oled.oledHAL;
 import edu.wpi.first.wpilibj.I2C;
 
 public class SSD1306HAL {
-    I2C SSD1306_Handle;
+    I2C oledHandle;
 
     private enum SSD1306_I2C_ADDR
     {
