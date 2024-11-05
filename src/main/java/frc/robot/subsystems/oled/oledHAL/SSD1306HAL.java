@@ -114,7 +114,7 @@ public class SSD1306HAL {
     public void drawPixel(int row, int col, PixelState status){
         if(col > 128 || col < 1) return;
         if(row > 64 || row < 1) return;
-        
+
         int bufferIndex = (row - (row % 8)) / 8 * 128 + (col - 1);
         int dataIndex = row % 8;
 

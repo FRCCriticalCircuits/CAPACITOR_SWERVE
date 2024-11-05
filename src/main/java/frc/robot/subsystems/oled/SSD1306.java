@@ -9,4 +9,6 @@ public class SSD1306 extends SubsystemBase{
     public SSD1306(){
         oledInstance = new SSD1306HAL(0x78);
     }
+
+    
 }

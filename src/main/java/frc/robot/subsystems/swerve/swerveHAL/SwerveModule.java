@@ -46,13 +46,13 @@ public class SwerveModule{
 
     /**
      * Create a Swerve Module Object
-     * @param driveMotorID : can ID of drive motor
-     * @param turningMotorID : can ID of turn motor
-     * @param canCoderID : can ID of CANCoder
+     * @param driveMotorID : CAN ID of drive motor
+     * @param turningMotorID : CAN ID of turn motor
+     * @param canCoderID : CAN ID of CANCoder
      * @param CANCoderOffset : CANCoder offset
      * @param turnMotorInverted : turn motor direction
      * @param driveMotorReversed : drive motor direction
-     * @param canCoderReversed : CANCoder direction
+     * @param canCoderReversed : CANCoder direction CCW/CW
      */
     public SwerveModule(int driveMotorID, int turningMotorID, int canCoderID, double CANCoderOffset, boolean turnMotorInverted, int driveMotorReversed, Boolean canCoderReversed){
         // Create Motors
@@ -288,3 +288,4 @@ public class SwerveModule{
         return outputVoltage;
     }
 }
+
