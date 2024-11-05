@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.I2C.Port;
 
 public class SSD1306HAL {
     I2C oledHandle;
-    private byte[] dataBuffer = new byte[128 * 64 / 8];
+    private byte[] dataBuffer = new byte[128 * 8];  // 8 page, 128 bytes each page
 
     public SSD1306HAL(int deviceAddress) {
         oledHandle = new I2C(Port.kOnboard, deviceAddress);
@@ -70,7 +70,7 @@ public class SSD1306HAL {
     /**
      * Send two commands to SSD 1306
      * @param cmd the first command
-     * @param argument the follow command
+     * @param arguments the follow commands
      */
     private void writeCmd (int cmd, int... arguments) {
         writeCmd(cmd);
@@ -92,7 +92,7 @@ public class SSD1306HAL {
     }
 
     /** 
-     * Apply buffer to SSD1306
+     * Send buffer to SSD1306 RAM
      */
     public void sendBuffer () {
         for(int page = 0; page < 8; page++){
@@ -104,32 +104,47 @@ public class SSD1306HAL {
         }
     }
 
-    public void drawPixel(int col, int row, Color color){
+    /**
+     * Draw Pixel
+     * @param row the row to set
+     * @param col the column to set
+     * @param status on/off {@link PixelState} 
+     * @apiNote result will be save to buffer, call sendBuffer to apply it
+     */
+    public void drawPixel(int row, int col, PixelState status){
         if(col > 128 || col < 1) return;
         if(row > 64 || row < 1) return;
-        dataBuffer[col * 128 + row - 1] = color.value;
+        
+        int bufferIndex = (row - (row % 8)) / 8 * 128 + (col - 1);
+        int dataIndex = row % 8;
+
+        if(status.value){
+            dataBuffer[bufferIndex] |= (byte) (1 << (8 - dataIndex));   // (buffer OR ( 1 << (row - 1) ) )
+        }else{
+            dataBuffer[bufferIndex] &= (byte) ~(1 << (8 - dataIndex));  // (buffer AND ( NOT (1 << (row - 1)) ) )
+        }
     }
 
     /**
      * Fill screen with specific color
-     * @param col the {@link Color} to set
+     * @param status the {@link PixelState} to set
      */
-    public void fillScreen (Color col) {
-        for(int i = 0; i < dataBuffer.length; i++) dataBuffer[i] = col.value;
+    public void fillScreen (PixelState status) {
+        for(int i = 0; i < dataBuffer.length; i++) dataBuffer[i] = (byte) ((status.value) ? 0x00 : 0xFF);
     }
 
-    /** Clear OLED Display */
+    /** Fill screen with {@link PixelState} OFF */
     public void clearScreen () {
-        fillScreen(Color.WHITE);
+        fillScreen(PixelState.OFF);
     }
 
-    public enum Color{
-        BLACK((byte) 0xFF),
-        WHITE((byte) 0x00);
+    public enum PixelState{
+        OFF(false),
+        ON(true);
 
-        public final byte value;
+        public final boolean value;
 
-        Color(byte value) {
+        PixelState(boolean value) {
             this.value = value;
         }
     }
