@@ -16,50 +16,41 @@ public class SSD1306HAL {
 
     /** Datasheet Page 28-32 */
     private void _init() {
-        /** Display off */
-        writeCmd(0xAE);
-
-        /** Set Clock Divide Ratio [3:0] (starts from 1) & oscillator frequency [4:7] (1000b for 100Hz) */
-        writeCmd(0xD5, 0x80);
-
-        /** Set Memory Addressing Mode, 0x00 -> Horizontal, 0x01 -> Vertical, 0x10 -> Page */
-        writeCmd(0x20, 0x10);
-
         /** Set Multiplex Ratio [16, 63], 0x3F for 63 */
         writeCmd(0xA8, 0x3F);
-
-        /** Set Com Reverse, 0x12 for Normal */
-        writeCmd(0xDA, 0x12);
-
-        /** Set Segment Reverse, 0xC0 for Normal */
-        writeCmd(0xA1, 0xC8);
-
-        /** Set Display Start Line [0x40, 0x7F], 0x40 for 0 as Start Line, 0x7F for 63 */
-        writeCmd(0x40);
 
         /** Set Display Offset, 0x00 for non-Offset */
         writeCmd(0xD3, 0x00);
 
+        /** Set Display Start Line [0x40, 0x7F], 0x40 for 0 as Start Line, 0x7F for 63 */
+        writeCmd(0x40);
+
+        /** Set Segment Reverse, 0xA0 for Normal */
+        writeCmd(0xA1); // Test
+
+        /** Set COM Reverse, 0xC8 for Reverse */
+        writeCmd(0xC0); // Test
+
+        /** Set COM Pins Hardware Configuration */
+        writeCmd(0xDA, 0x02); // Test 000a0010 a0 for sequential
+
         /** Set Contrast in [0x00, 0x100] */
-        writeCmd(0x81, 0xFF);
+        writeCmd(0x81, 0x7F);
 
-        /** 
-         * Set Pre-Charge Period, Pre-charge Period is 15 Clocks, Discharge Period is 1 Clock 
-         * Note that a Shorter Pre-charge is Recommanded when Static Content is Displayed 
-         */
-        writeCmd(0xD9, 0xF1);
+        /** Output RAM to Display (0xA4) */
+        writeCmd(0xA4);
 
-        /** Set VCOMH (0x00 / 0x20 / 0x30), Recommanded to use 0x20 for a Balanced Contrast */
-        writeCmd(0xDB, 0x20);
+        /** Set Memory Addressing Mode, 0x00 -> Horizontal, 0x01 -> Vertical, 0x10 -> Page */
+        writeCmd(0x20, 0x10);
+
+        /** Set Clock Divide Ratio [3:0] (starts from 1) & oscillator frequency [4:7] (1000b for 100Hz) */
+        writeCmd(0xD5, 0x80);
 
         /** 
          * Datasheet Page 62
          * Set Charge Pump Enable (0x14) / Disable (0x10) 
          */
         writeCmd(0x8D, 0x14);
-
-        /** Output RAM to Display (0xA4) */
-        writeCmd(0xA4);
 
         /** None Inverted */
         writeCmd(0xA6);
