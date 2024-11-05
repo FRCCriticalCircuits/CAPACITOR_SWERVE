@@ -100,7 +100,7 @@ public class SSD1306HAL {
             writeCmd(0xB0 + page, 0x00, 0x10);
 
             // Write Multi Data
-            writeData(dataBuffer, page * 128, 128);
+            writeData(dataBuffer, page * 128, 1024);
         }
     }
 
