@@ -94,7 +94,7 @@ public class SSD1306HAL {
     /** 
      * Apply buffer to SSD1306
      */
-    private void sendBuffer () {
+    public void sendBuffer () {
         for(int page = 0; page < 8; page++){
             // Set Page Address & Column Address
             writeCmd(0xB0 + page, 0x00, 0x10);
@@ -104,16 +104,22 @@ public class SSD1306HAL {
         }
     }
 
+    public void drawPixel(int col, int row, Color color){
+        if(col > 128 || col < 1) return;
+        if(row > 64 || row < 1) return;
+        dataBuffer[col * 128 + row - 1] = color.value;
+    }
+
     /**
      * Fill screen with specific color
      * @param col the {@link Color} to set
      */
-    private void fillScreen (Color col) {
+    public void fillScreen (Color col) {
         for(int i = 0; i < dataBuffer.length; i++) dataBuffer[i] = col.value;
     }
 
     /** Clear OLED Display */
-    private void clearScreen () {
+    public void clearScreen () {
         fillScreen(Color.WHITE);
     }
 

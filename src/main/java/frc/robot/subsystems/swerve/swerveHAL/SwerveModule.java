@@ -134,7 +134,7 @@ public class SwerveModule{
      * @return the angle in Radians
      */
     public double getAbsoluteAngleRad() {
-        return canCoder.getAbsolutePosition().waitForUpdate(0.1).getValue() * Math.PI * 2; 
+        return canCoder.getAbsolutePosition().waitForUpdate(0.2).getValue() * Math.PI * 2; 
     }
 
     /**
