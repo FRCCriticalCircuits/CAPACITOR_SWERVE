@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SPI.Port;
 
 public class Constants {
@@ -25,7 +24,7 @@ public class Constants {
             public static final int REAR_RIGHT_TURN_ID = 11;
             public static final int REAR_RIGHT_CANCODER_ID = 12;
 
-            public static Port GYRO_PORT = SPI.Port.kMXP;
+            public static Port GYRO_PORT = Port.kMXP;
         }
 
         public class LED{

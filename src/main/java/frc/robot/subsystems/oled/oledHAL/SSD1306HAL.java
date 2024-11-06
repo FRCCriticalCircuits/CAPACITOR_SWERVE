@@ -1,6 +1,7 @@
 package frc.robot.subsystems.oled.oledHAL;
 
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.I2C.Port;
 
 public class SSD1306HAL {
@@ -8,14 +9,20 @@ public class SSD1306HAL {
     private byte[] dataBuffer = new byte[128 * 8];  // 8 page, 128 bytes each page
 
     public SSD1306HAL(int deviceAddress) {
-        oledHandle = new I2C(Port.kOnboard, deviceAddress);
+        oledHandle = new I2C(Port.kMXP, deviceAddress);
         _init();
-        
-        clearScreen();
     }
 
-    /** Datasheet Page 28-32 */
+    /** From Datasheet Page 28-32 & U8G2 */
     private void _init() {
+        Timer.delay(0.1);
+
+        /** Display OFF */
+        writeCmd(0xAE);
+
+        /** Set Clock Divide Ratio [3:0] (starts from 1) & oscillator frequency [4:7] */
+        writeCmd(0xD5, 0x80);
+
         /** Set Multiplex Ratio [16, 63], 0x3F for 63 */
         writeCmd(0xA8, 0x3F);
 
@@ -25,32 +32,33 @@ public class SSD1306HAL {
         /** Set Display Start Line [0x40, 0x7F], 0x40 for 0 as Start Line, 0x7F for 63 */
         writeCmd(0x40);
 
-        /** Set Segment Reverse, 0xA0 for Normal */
-        writeCmd(0xA1); // Test
-
-        /** Set COM Reverse, 0xC8 for Reverse */
-        writeCmd(0xC0); // Test
-
-        /** Set COM Pins Hardware Configuration */
-        writeCmd(0xDA, 0x02); // Test 000a0010 a0 for sequential
-
-        /** Set Contrast in [0x00, 0x100] */
-        writeCmd(0x81, 0x7F);
-
-        /** Output RAM to Display (0xA4) */
-        writeCmd(0xA4);
+        /** Set Charge Pump Enable (0x14) / Disable (0x10) */
+        writeCmd(0x8D, 0x14);
 
         /** Set Memory Addressing Mode, 0x00 -> Horizontal, 0x01 -> Vertical, 0x10 -> Page */
         writeCmd(0x20, 0x10);
 
-        /** Set Clock Divide Ratio [3:0] (starts from 1) & oscillator frequency [4:7] (1000b for 100Hz) */
-        writeCmd(0xD5, 0x80);
+        /** Set Segment Reverse, 0xA0 for Normal */
+        writeCmd(0xA1); // Test
 
-        /** 
-         * Datasheet Page 62
-         * Set Charge Pump Enable (0x14) / Disable (0x10) 
-         */
-        writeCmd(0x8D, 0x14);
+        /** Set COM Reverse, 0xC8 for Reverse */
+        writeCmd(0xC8);
+
+        /** Set COM Pins Hardware Configuration */
+        writeCmd(0xDA, 0x12); // Test 000a0010 a0 for sequential
+
+        /** Set Contrast in [0x00, 0x100] */
+        writeCmd(0x81, 0xCF);
+
+        writeCmd(0xD9, 0xF1);
+
+        writeCmd(0xDB, 0x40);
+
+        /** Disable Scrolling */
+        writeCmd(0x2E);
+
+        /** Output RAM to Display (0xA4) */
+        writeCmd(0xA4);
 
         /** None Inverted */
         writeCmd(0xA6);
@@ -89,18 +97,17 @@ public class SSD1306HAL {
         for (int i = index; i < (index + size); i++) {
             buffer[i - index + 1] = data[i];
         }
+        oledHandle.writeBulk(buffer);
     }
 
     /** 
      * Send buffer to SSD1306 RAM
      */
     public void sendBuffer () {
-        for(int page = 0; page < 8; page++){
+        for(byte page = 0; page < 8; page++){
             // Set Page Address & Column Address
-            writeCmd(0xB0 + page, 0x00, 0x10);
-
-            // Write Multi Data
-            writeData(dataBuffer, page * 128, 1024);
+            writeCmd((0xB0 + page), 0x00, 0x10);
+            writeData(dataBuffer, page * 128, 128);
         }
     }
 
@@ -129,13 +136,13 @@ public class SSD1306HAL {
      * Fill screen with specific color
      * @param status the {@link PixelState} to set
      */
-    public void fillScreen (PixelState status) {
-        for(int i = 0; i < dataBuffer.length; i++) dataBuffer[i] = (byte) ((status.value) ? 0x00 : 0xFF);
+    public void fillScreen () {
+        for(int i = 0; i < dataBuffer.length; i++) dataBuffer[i] = (byte) 0xFF;
     }
 
     /** Fill screen with {@link PixelState} OFF */
     public void clearScreen () {
-        fillScreen(PixelState.OFF);
+        fillScreen();
     }
 
     public enum PixelState{
