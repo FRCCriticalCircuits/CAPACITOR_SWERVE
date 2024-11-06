@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.teleop.manualDrive;
 import frc.robot.subsystems.Controller;
-import frc.robot.subsystems.oled.SSD1306;
 import frc.robot.subsystems.swerve.SwerveSubsystem;
 
 public class RobotContainer {
@@ -18,8 +17,6 @@ public class RobotContainer {
 
   private Controller controller = Controller.getInstance();
   private CommandXboxController driverCommandController = new CommandXboxController(0);
-
-  private SSD1306 oled = new SSD1306();
   
   public RobotContainer() {
     swerveSubsystem.setDefaultCommand(
